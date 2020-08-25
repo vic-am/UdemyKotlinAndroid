@@ -8,6 +8,7 @@ import com.example.tasks.service.listener.APIListener
 import com.example.tasks.service.listener.ValidationListener
 import com.example.tasks.service.repository.local.SecurityPreferences
 import com.example.tasks.service.constants.TaskConstants
+import com.example.tasks.service.helper.FingerprintHelper
 import com.example.tasks.service.model.HeaderModel
 import com.example.tasks.service.model.PriorityModel
 import com.example.tasks.service.repository.PersonRepository
@@ -26,8 +27,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     val login: LiveData<ValidationListener> = mLogin
 
     // Login usando SharedPreferences
-    private val mLoggedUser = MutableLiveData<Boolean>()
-    val loggedUser: LiveData<Boolean> = mLoggedUser
+    private val mFingerprint = MutableLiveData<Boolean>()
+    val fingerprint: LiveData<Boolean> = mFingerprint
 
     /**
      * Faz login usando API
@@ -53,24 +54,19 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         })
     }
 
-    /**
-     * Verifica se usuário está logado
-     */
-    fun verifyLoggedUser() {
+    fun isAuthenticationAvailable() {
+
         val personKey = mSecurityPreferences.get(TaskConstants.SHARED.PERSON_KEY)
         val tokenKey = mSecurityPreferences.get(TaskConstants.SHARED.TOKEN_KEY)
 
         // Se token e person key forem diferentes de vazio, usuário está logado
-        val logged = (tokenKey != "" && personKey != "")
+        val everLogged = (tokenKey != "" && personKey != "")
 
         // Atualiza valores de Header para requisições
         RetrofitClient.addHeaders(personKey, tokenKey)
 
-        // Atualiza o valor
-        mLoggedUser.value = logged
-
         // Se usuário não estiver logado, aplicação vai atualizar os dados
-        if (!logged) {
+        if (!everLogged) {
             mPriorityRepository.all(object : APIListener<List<PriorityModel>> {
                 override fun onSuccess(result: List<PriorityModel>, statusCode: Int) {
                     mPriorityRepository.save(result)
@@ -78,10 +74,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
                 // Erro silencioso
                 override fun onFailure(message: String) {
-                    val s = ""
                 }
-
             })
+        }
+
+        if (FingerprintHelper.isAuthenticationAvailable(getApplication())) {
+            mFingerprint.value = everLogged
         }
     }
 
