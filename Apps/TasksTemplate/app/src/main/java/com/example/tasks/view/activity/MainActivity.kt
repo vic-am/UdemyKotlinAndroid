@@ -1,7 +1,6 @@
-package com.example.tasks.view
+package com.example.tasks.view.activity
 
 import android.os.Bundle
-import android.view.Menu
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.navigation.NavigationView
